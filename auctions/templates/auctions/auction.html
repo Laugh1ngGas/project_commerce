@@ -1,0 +1,125 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+
+{% if auction %}
+
+<div class="text-center">
+    <span style="vertical-align:text-bottom; font-size: 40px;">{{ auction.item_name }}</span>
+    <span style="vertical-align:text-bottom;">
+        {% if auction.active %}
+        <label class="text-success" style="font-size: 25px; vertical-align: bottom;">(Active)</label>
+        {% else %}
+        <label class="text-muted" style="font-size: 25px; vertical-align: bottom;">(Closed)</label>
+        {% endif %}
+    </span>
+</div>
+<p></p>
+<div>
+    {% if auction.picture_url != ''%}
+    <div style="text-align: center;">
+        <img src={{ auction.picture_url }} class="img-thumbnail" alt="picture url" width="320" height="250">
+        <p></p>
+    </div>
+    {% endif %}
+
+    {% if winner_user %}
+    <p></p>
+    <div class="alert alert-success" style="text-align: center;">
+    <strong>Congratulations!</strong> You win auction!
+    </div>
+    {% endif %}
+    
+    <div style="text-align: center;">
+        {% if user.is_authenticated %}
+        {% if is_watched %}
+        <form action="{% url 'remove_from_watchlist' auction.id %}" method="post">
+            {% csrf_token %}
+            <input type="submit" name="Remove from watchlist" id="remove_from_watchlist" value="Remove from watchlist">
+        </form>
+        {% else %}
+        <form action="{% url 'add_to_watchlist' auction.id %}" method="post">
+            {% csrf_token %}
+            <input type="submit" name="Add to watchlist" id="Add_to_watchlist" value="Add to watchlist">
+        </form>
+        {% endif %}
+        {% endif %}
+    </div>
+
+    <div style="text-align: center;">
+        <div class="container" style="display: inline-block; text-align: left; height: auto">
+            <span class="text-muted">Decription:</span>
+            <p>{{ auction.item_description }}</p>
+            <span class="text-muted">Category:</span>
+            <p>{% if auction.category %}
+            {{ auction.category.name }}</p>
+            {% else %}
+            <p>No category</p>
+            {% endif %} 
+            <span class="text-muted">Selller:</span>
+            <p>{{ authorFullName }}</p>
+        </div>
+    </div>
+
+    <div style="text-align: center;">
+        <h3>Stat bid:</h3>
+        <p class="text-danger" style="font-size: 18px;">{{ auction.start_bid }}</p>
+        <h3>Current bid:</h3>
+        <p class="text-danger" style="font-size: 18px;">{{ current_bid }}</p>
+
+        {% if user.is_authenticated and bidform and auction.active %}
+        <div class="form-group">
+            <form action="{%url 'auction' auction.id %}" method="post">
+                {% csrf_token %}
+                {{ bidform.as_p}}
+                <input type="submit" value="Bid" class="btn btn-success" style="margin-bottom: 30px;">
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div style="text-align: center;">
+        {% if user.is_authenticated and user == auction.author and auction.active %}
+        <form action="{% url 'close_auction' auction.id %}" method="post">
+            {% csrf_token %}
+            <input type="submit" name="Close auction" id="close_auction" value="Close auction" style="margin-bottom: 40px;">
+        </form>
+        {% endif %}
+    </div>
+
+    <div style="text-align: center;">
+        <h3 style="margin-bottom: -22px;">Comments:</h3>
+        {% if user.is_authenticated %}
+        <div class="container" style="display: inline-block; text-align: left; height: auto; min-height: 300px;">
+            <div class="form-group">
+                <form action="{%url 'auction' auction.id %}" method="post">
+                    {% csrf_token %}
+                    <label for="comment_text">Add comment:</label>
+                    <textarea class="textarea" name="comment_text" cols="22" rows="5" maxlength="200"
+                        placeholder="Type your comment here." style="min-height: 150px;"></textarea>
+                    <input type="submit" value="Add comment" class="btn btn-success" style="margin-top: 15px; display: block; margin-left: auto; margin-right: auto;">
+                </form>
+            </div>
+            {% endif %}
+            <div id="comments_group" class="form-group">
+                {% for comment in comments %}
+                <div>
+                    <div>
+                        <label class="text-secondary" style="font-size: 12px;">{{ comment.author }}
+                            ({{comment.date}})</label>
+                    </div>
+                    <div>
+                        <label>{{ comment.text }}</label>
+                    </div>
+                    <p></p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<h4 class="text-muted">Something gone wrong</h4>
+{% endif %}
+
+{% endblock %}
